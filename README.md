@@ -1,97 +1,75 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# OnCre Mobile
 
-# Getting Started
+React Native (bare CLI, TypeScript) app for OnCRE — credit, wallet and recovery
+for small businesses.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Stack
 
-## Step 1: Start Metro
+| Concern         | Choice                                    |
+| --------------- | ----------------------------------------- |
+| Framework       | React Native 0.88 (bare CLI) + TypeScript |
+| Navigation      | React Navigation (bottom tabs)            |
+| Server state    | TanStack Query                            |
+| App/UI state    | Zustand                                   |
+| Icons           | SVG → React components (theme-recolorable) |
+| Secure storage  | react-native-keychain (for secrets)       |
+| Package manager | yarn (berry, node-modules linker)         |
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+> Navigation note: the brief called for `expo-router`, but RN 0.88 is ahead of
+> what the Expo SDK supports, so we use React Navigation to stay fully native and
+> compatible. Screens are plain components, so switching routers later is cheap.
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+## Getting started
 
-```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
+```bash
+yarn install
+cd ios && pod install && cd ..   # iOS only
+yarn ios        # or: yarn android
+yarn start      # Metro, if not started automatically
 ```
 
-## Step 2: Build and run your app
+Useful scripts:
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+```bash
+yarn tsc --noEmit         # typecheck
+node scripts/gen-icons.js # regenerate the icon registry after adding SVGs
 ```
 
-### iOS
+## Project structure
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
+```
+src/
+  theme/            Design tokens + semantic themes (light now, dark-ready)
+    palette.ts      Raw colour scales (brand / neutral / status) — never used directly
+    tokens.ts       Spacing, radius, typography, sizing (theme-agnostic)
+    themes.ts       Semantic roles → light & dark. Dark is a placeholder to fill in.
+    ThemeProvider.tsx  useTheme(), makeStyles()
+  components/        Reusable UI library (Button, Text, Field, BottomSheet, …)
+    Icon/            <Icon name> — recolours any SVG via `currentColor`
+  features/
+    home/            Home screen + all states (main/empty/loading/stale/pending/
+                     hidden/error/switch-business), mock API, query hook
+    components/      Living component gallery (the "More" tab for now)
+  navigation/        Tab navigator + custom TabBar
+  store/             Zustand stores (session, dev scenario switch)
+  lib/               currency, query client
+  assets/icons|logo  SVGs
 ```
 
-Then, and every time you update your native dependencies, run:
+## Theming & dark mode
 
-```sh
-bundle exec pod install
-```
+Screens only read **semantic roles** (`colors.text.primary`, `colors.bg.canvas`,
+`colors.status.error.fg`, …) — never raw palette values. To add dark mode, fill
+in the real colours in `darkTheme` (src/theme/themes.ts); its shape is identical
+to light by contract, so TypeScript guarantees nothing is missed. No screen
+changes required.
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+Icons are theme-adaptable: every SVG uses `currentColor`, and `<Icon>` defaults
+to the active theme's text colour (override with `color={...}`).
 
-```sh
-# Using npm
-npm run ios
+## Previewing Home states
 
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+In dev builds a **scenario bar** at the bottom of Home flips between Main, Empty,
+Stale, Pending and Error, plus a balance hide/show toggle — so every design
+variant is reachable without a backend. It is gated behind `__DEV__`.
+# OnCreMobile
